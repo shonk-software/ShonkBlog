@@ -67,14 +67,14 @@ With the corresponding Dockerfile (including some utilities):
 FROM --platform=linux/arm64 public.ecr.aws/amazonlinux/amazonlinux:latest
 
 RUN dnf install -y \
+    amazon-ssm-agent \
     unzip \
     jq \
     postgresql17 \
     zstd \
     zip \
     zsh \
-    && dnf clean all \
-    && rm -rf /var/cache/dnf
+    && dnf clean all
 
 CMD ["sleep", "infinity"]
 ```
