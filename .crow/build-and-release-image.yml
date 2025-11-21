@@ -1,0 +1,31 @@
+when:
+  branch: main
+  event: [ push, manual ]
+
+
+variables:
+  - &image_name shonkblog
+  - &registry ghcr.io
+
+steps:
+  build-and-push:
+    image: quay.io/buildah/stable
+    # Privileged mode is required for Podman/Buildah inside a container
+    privileged: true
+    environment:
+      IMAGE_NAME: *image_name
+      REGISTRY_HOST: *registry
+      # Maps Woodpecker's CI_REPO_OWNER to the registry path
+      IMAGE_REGISTRY: ghcr.io/${CI_REPO_OWNER}
+      REGISTRY_USER: "flamion"
+      REGISTRY_TOKEN:
+        from_secret: registry_token
+    commands:
+      # 1. Login to GHCR
+      - echo $REGISTRY_TOKEN | buildah login -u $REGISTRY_USER --password-stdin $REGISTRY_HOST
+      
+      # 2. Build the image
+      - buildah build --layers -t $IMAGE_NAME:latest -f Containerfile .
+      
+      # Push 'latest' only on main branch
+      - buildah push $IMAGE_NAME:latest $IMAGE_REGISTRY/$IMAGE_NAME:latest
